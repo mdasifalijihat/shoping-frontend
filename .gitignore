@@ -1,41 +1,42 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# Dependencies and package manager caches
+/node_modules/
+/.pnpm-store/
+/.pnp/
 .pnp.*
 .yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/versions/
 
-# testing
-/coverage
-
-# next.js
+# Next.js, TypeScript, and build output
 /.next/
 /out/
+/build/
+*.tsbuildinfo
+/next-env.d.ts
 
-# production
-/build
+# Test and lint output
+/coverage/
+/.eslintcache
 
-# misc
-.DS_Store
+# Environment files and private keys
+.env*
+!.env.example
 *.pem
 
-# debug
+# Local deployment metadata
+/.vercel/
+
+# Package manager logs
 npm-debug.log*
+pnpm-debug.log*
+.pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Operating system and local editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+/.history/
