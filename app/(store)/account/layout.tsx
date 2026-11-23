@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
+import { confirmSignOut } from "@/lib/confirm-sign-out";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -22,6 +23,9 @@ const links = [
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
+  const user = session.data?.user;
+  const canViewAccount =
+    !session.isPending && Boolean(user && !user.isBlocked);
   const [pending, setPending] = useState(false);
   const cache = useQueryClient();
   const router = useRouter();
@@ -30,6 +34,8 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
     if (pending) return;
     setPending(true);
     try {
+      if (!(await confirmSignOut())) return;
+
       const { error } = await authClient.signOut();
       if (error) {
         toast.error(error.message || "Could not sign out.");
@@ -53,8 +59,22 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       </h1>
       {session.isPending ? (
         <StoreLoading rows={2} />
-      ) : session.data?.user ? (
-        <div className="grid items-start gap-5 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      ) : !canViewAccount ? (
+        <div className="space-y-3 rounded-xl border bg-card p-5">
+          <p>Log in to view your account.</p>
+          <Link href="/login" className={buttonVariants()}>
+            Log in
+          </Link>
+        </div>
+      ) : null}
+      <div
+        className={
+          canViewAccount
+            ? "grid items-start gap-5 lg:grid-cols-[13rem_minmax(0,1fr)]"
+            : "hidden"
+        }
+      >
+        {canViewAccount && (
           <Card className="gap-2 p-2">
             <Suspense fallback={<Skeleton className="h-9" />}>
               <AccountLinks />
@@ -69,16 +89,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
               <LogOut /> {pending ? "Signing out..." : "Logout"}
             </Button>
           </Card>
-          <div className="min-w-0">{children}</div>
-        </div>
-      ) : (
-        <div className="space-y-3 rounded-xl border bg-card p-5">
-          <p>Log in to view your account.</p>
-          <Link href="/login" className={buttonVariants()}>
-            Log in
-          </Link>
-        </div>
-      )}
+        )}
+        <div className="min-w-0">{children}</div>
+      </div>
     </main>
   );
 }

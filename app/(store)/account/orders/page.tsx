@@ -26,7 +26,10 @@ import { authClient } from "@/lib/auth-client";
 
 export default function MyOrdersPage() {
   const session = authClient.useSession();
-  const user = session.data?.user;
+  const user =
+    session.isPending || session.data?.user.isBlocked
+      ? undefined
+      : session.data?.user;
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<{
     id: string;
@@ -127,7 +130,7 @@ export default function MyOrdersPage() {
           </>
         )}
         <Dialog
-          open={!!selected}
+          open={!!selected && user?.role === "CUSTOMER"}
           onOpenChange={(open) => {
             if (!open) setSelected(null);
           }}
@@ -137,7 +140,7 @@ export default function MyOrdersPage() {
               <DialogTitle>{selected?.number}</DialogTitle>
               <DialogDescription>Order details and pricing</DialogDescription>
             </DialogHeader>
-            {selected && user && (
+            {selected && user?.role === "CUSTOMER" && (
               <OrderDetails id={selected.id} customerId={user.id} />
             )}
           </DialogContent>

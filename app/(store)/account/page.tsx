@@ -21,7 +21,8 @@ import { authClient } from "@/lib/auth-client";
 
 export default function ProfilePage() {
   const session = authClient.useSession();
-  const options = profileQuery(session.data?.user.id);
+  const user = session.isPending ? undefined : session.data?.user;
+  const options = profileQuery(user?.isBlocked ? undefined : user?.id);
   const query = useQuery(options);
   const cache = useQueryClient();
 

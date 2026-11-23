@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
+import { confirmSignOut } from "@/lib/confirm-sign-out";
 import { cn } from "@/lib/utils";
 
 const groups = [
@@ -107,11 +108,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { data, isPending } = authClient.useSession();
-  const router = useRouter();
 
   async function signOut() {
+    if (signingOut) return;
     setSigningOut(true);
     try {
+      if (!(await confirmSignOut())) return;
+
       const { error } = await authClient.signOut();
       if (error) {
         toast.error(error.message || "Could not sign out.");
@@ -119,8 +122,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       }
       queryClient.clear();
       toast.success("Signed out.");
-      router.replace("/login");
-      router.refresh();
+      window.location.replace("/admin");
     } catch {
       toast.error("Could not sign out.");
     } finally {

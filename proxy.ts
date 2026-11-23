@@ -1,7 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  const login = () => NextResponse.redirect(new URL("/login", request.url));
+  const { pathname } = request.nextUrl;
+  const isAdminHome = pathname === "/admin";
+  const isAdminRoute = isAdminHome || pathname.startsWith("/admin/");
+  const login = () => {
+    if (isAdminHome) {
+      const response = NextResponse.rewrite(new URL("/admin-login", request.url));
+      response.headers.set("Cache-Control", "private, no-store");
+      return response;
+    }
+
+    return NextResponse.redirect(new URL(isAdminRoute ? "/admin" : "/login", request.url));
+  };
   const authUrl = process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
   const cookie = request.headers.get("cookie");
 
@@ -29,10 +40,8 @@ export async function proxy(request: NextRequest) {
     const user = session?.user;
     if (typeof user?.id !== "string" || user.isBlocked === true) return login();
 
-    const { pathname } = request.nextUrl;
-    const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
     if (isAdminRoute && user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return isAdminHome ? login() : NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();
